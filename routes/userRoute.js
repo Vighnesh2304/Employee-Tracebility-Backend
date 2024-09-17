@@ -10,15 +10,15 @@ const checkToken = require("../middleware/checkToken")
 // (1) user/adduser
 
 router.post("/adduser", (req, res, next) => {
-  const { employee_id, first_name, last_name, email, password, phone_number, address, date_of_joining, role, department, other_info, documents } = req.body;
+  const { employee_id, email, password, phone_number, qualification, experience, role} = req.body;
 
-  if (!employee_id || !first_name || !last_name || !email || !date_of_joining || !role) {
+  if (!employee_id ||  !email || !role) {
     return next(new customError(400, "Missing required fields"));
   }
 
-  const query = `INSERT INTO user_tbl (employee_id, first_name, last_name, email, password, phone_number, address, date_of_joining, role, department, other_info, documents) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const query = `INSERT INTO users_tbl (employee_id, email, password, phone_number, qualification, experience, role) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-  connection.query(query, [employee_id, first_name, last_name, email, password, phone_number, address, date_of_joining, role, department, other_info, documents], (err, results) => {
+  connection.query(query, [employee_id, email, password, phone_number, qualification, experience, role], (err, results) => {
     if (err) {
       return next(new customError(500, `Database query error: ${err}`));
     }
@@ -27,7 +27,7 @@ router.post("/adduser", (req, res, next) => {
       message: "User registered successfully"
     });
   });
-});
+},);
 
 
 // (2) user/login

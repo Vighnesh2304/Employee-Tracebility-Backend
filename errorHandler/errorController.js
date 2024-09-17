@@ -6,7 +6,8 @@ const globalErrorMiddleware = (error, req, res, next) => {
 
     res.status(error.statusCode).json({
         success: false,
-        message: error.message
+        message: error.message,
+        stack:error.stack
     })
 
 }

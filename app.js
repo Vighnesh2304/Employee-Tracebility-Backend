@@ -11,8 +11,10 @@ require("dotenv").config();
 
 // importing the Routes
 const userRoute = require('./routes/userRoute')
-const supervisorRoute = require('./routes/SupervisorRoutes')
-const managerRoute = require('./routes/ManagerRoutes')
+const shiftRoute = require('./routes/shiftRoute')
+const linesRoute = require('./routes/linesRoute')
+const jobsRoute = require('./routes/jobsRoutes')
+
 
 const app = express();
 app.use(cors({
@@ -29,9 +31,11 @@ app.use(cookieparser());
 
 
 // useing the routes
-app.use('/user',userRoute)
-app.use('/supervisor',supervisorRoute)
-app.use('/manager',managerRoute)
+app.use('/user', userRoute)
+app.use('/shift', shiftRoute)
+app.use('/line', linesRoute)
+app.use('/job', jobsRoute)
+
 
 
 // default route  
