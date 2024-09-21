@@ -49,6 +49,38 @@ router.get("/getall", (req, res, next) => {
     });
 });
 
+// (2) line/updateline/:line_id
+
+router.patch("/updateline/:line_id", (req, res, next) => {
+    const { line_id } = req.params;
+    const { line_number, line_name, line_description } = req.body;
+  
+    if (!line_id) {
+      return next(new customError(400, "Line ID is required"));
+    }
+  
+    if (!line_number && !line_name && !line_description) {
+      return next(new customError(400, "At least one field is required to update"));
+    }
+  
+    const query = `UPDATE lines_tbl SET ? WHERE line_id = ?`;
+  
+    const updates = {};
+    if (line_number) updates.line_number = line_number;
+    if (line_name) updates.line_name = line_name;
+    if (line_description) updates.line_description = line_description;
+  
+    connection.query(query, [updates, line_id], (err, results) => {
+      if (err) {
+        return next(new customError(500, `Database query error: ${err}`));
+      }
+      res.status(200).json({
+        success: true,
+        message: "Line updated successfully"
+      });
+    });
+  });
+
 
 module.exports = router;
 

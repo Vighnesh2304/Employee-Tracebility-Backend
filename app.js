@@ -54,3 +54,9 @@ app.listen(PORT, () => {
 
 // below link to invite team on the postman
 // https://app.getpostman.com/join-team?invite_code=ea09a2afb2d40f833b500a38cb6ab7f0 
+
+
+// command to start the XAMPP Terminal for Mysql and Apache Server 
+// sudo /opt/lampp/manager-linux-x64.run
+
+
