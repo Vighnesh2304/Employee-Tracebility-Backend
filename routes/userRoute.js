@@ -39,7 +39,7 @@ const login = (req, res, next, role) => {
   if (!employee_id && !email) return next(new Error('Employee ID or email required.'));
   if (!['supervisor', 'manager', 'worker'].includes(role)) return next(new Error('Invalid role.'));
 
-  const query = `SELECT user_id, employee_id, first_name, password, role FROM user_tbl WHERE role = ? AND (employee_id = ? OR email = ?)`;
+  const query = `SELECT user_id, employee_id, first_name, password, role FROM users_tbl WHERE role = ? AND (employee_id = ? OR email = ?)`;
 
   connection.query(query, [role, employee_id, email], (err, results) => {
     if (err) return next(new Error(`Database query error: ${err}`));
