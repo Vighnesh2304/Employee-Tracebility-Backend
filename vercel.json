@@ -1,20 +1,36 @@
 {
-    "version": 2,
-    "name": "employee-tracebility",
-    "builds": [
-      {
-        "src": "app.js",
-        "use": "@vercel/node",
-        "config": {
-          "maxLambdaSize": "50mb",
-          "runtime": "nodejs16.x"
-        }
+  "version": 2,
+  "name": "employee-tracebility",
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "runtime": "nodejs16.x"
       }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/app.js"
-      }
-    ]
-  }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/user/(.*)",
+      "dest": "/app.js"
+    },
+    {
+      "src": "/shift/(.*)",
+      "dest": "/app.js"
+    },
+    {
+      "src": "/line/(.*)",
+      "dest": "/app.js"
+    },
+    {
+      "src": "/job/(.*)",
+      "dest": "/app.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/app.js"
+    }
+  ]
+}
