@@ -33,7 +33,7 @@ const checkToken = (req, res, next) => {
     const user_id = decodeData.user_id;
     const employee_id = decodeData.employee_id;
 
-    const query = `SELECT user_id, employee_id, role FROM user_tbl WHERE employee_id = ? OR user_id = ?`;
+    const query = `SELECT user_id, employee_id, role FROM users_tbl WHERE employee_id = ? OR user_id = ?`;
 
 connection.query(query, [employee_id, user_id], (err, results) => {
     if (err) {
