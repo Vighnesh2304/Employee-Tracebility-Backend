@@ -93,9 +93,7 @@ router.get('/logout', (req, res, next) => {
 router.get("/getuser", checkToken, (req, res, next) => {
   const user_id = req.user.user_id;
   const employee_id = req.user.employee_id;
-  console.log("Executing query for user with employee_id:", employee_id, "and user_id:", user_id);
   const query = `SELECT * FROM users_tbl WHERE employee_id = ? OR user_id = ?`;
-  console.log("Query: ", query);
 
   connection.query(query, [employee_id, user_id], (err, results) => {
     if (err) {
