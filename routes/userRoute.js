@@ -35,22 +35,33 @@ router.post("/adduser", (req, res, next) => {
 const login = (req, res, next, role) => {
   const { employee_id, email, password } = req.body;
 
+  // Validate input
   if (!password) return next(new Error("Please enter password"));
-  if (!employee_id && !email) return next(new Error('Employee ID or email required.'));
-  if (!['supervisor', 'manager', 'worker'].includes(role)) return next(new Error('Invalid role.'));
+  if (!employee_id && !email) return next(new Error("Employee ID or email required."));
+  if (!['supervisor', 'manager', 'worker'].includes(role)) return next(new Error("Invalid role."));
 
-  const query = `SELECT user_id, employee_id, first_name, password, role FROM users_tbl WHERE role = ? AND (employee_id = ? OR email = ?)`;
+  // SQL query according to the provided fields
+  const query = `
+    SELECT user_id, employee_id, email, password, phone_number, qualification, experience, role 
+    FROM users_tbl 
+    WHERE role = ? AND (employee_id = ? OR email = ?)
+  `;
 
+  // Execute the query
   connection.query(query, [role, employee_id, email], (err, results) => {
     if (err) return next(new Error(`Database query error: ${err}`));
     if (results.length === 0) return next(new Error("User not found"));
 
     const user = results[0];
+
+    // Check if the password matches
     if (user.password !== password) return next(new Error("Invalid password, please try again"));
 
+    // Send the user token on successful login
     sendToken(user, 200, res);
   });
 };
+
 
 
 
