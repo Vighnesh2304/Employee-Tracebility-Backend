@@ -12,10 +12,7 @@ require("dotenv").config();
 
 
 const app = express();
-app.use(cors({
-    credentials:true,
-    origin:'http://localhost:5173'
-}))
+app.use(cors(corsOptions));
 
 // importing the Routes
 const userRoute = require('./routes/userRoute')
