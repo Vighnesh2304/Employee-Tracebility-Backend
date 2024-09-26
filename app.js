@@ -9,11 +9,6 @@ const globalErrorMiddleware = require("./errorHandler/errorController")
 
 require("dotenv").config();
 
-// importing the Routes
-const userRoute = require('./routes/userRoute')
-const shiftRoute = require('./routes/shiftRoute')
-const linesRoute = require('./routes/linesRoute')
-const jobsRoute = require('./routes/jobsRoutes')
 
 
 const app = express();
@@ -21,6 +16,12 @@ app.use(cors({
     credentials:true,
     origin:'http://localhost:5173'
 }))
+
+// importing the Routes
+const userRoute = require('./routes/userRoute')
+const shiftRoute = require('./routes/shiftRoute')
+const linesRoute = require('./routes/linesRoute')
+const jobsRoute = require('./routes/jobsRoutes')
 
 // middle-ware for the req.body
 app.use(express.json());
