@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyparser = require("body-parser");
 const cookieparser = require("cookie-parser");
-const corsOptions = require("./utils/utils")
 const cors = require("cors");
 const customError = require("./errorHandler/customError");
 const globalErrorMiddleware = require("./errorHandler/errorController");
@@ -11,7 +10,10 @@ require("dotenv").config();
 const app = express();
 
 // CORS configuration
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: 'https://employee-tracebility.vercel.app', // Allow this origin
+  credentials: true, // Allow cookies and credentials
+}));
 
 // importing the Routes
 const userRoute = require('./routes/userRoute');
