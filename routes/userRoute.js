@@ -32,23 +32,23 @@ router.post("/adduser", (req, res, next) => {
 
 // (2) user/login
 
-const login = (req, res, next, role) => {
+// login API - only use employee_id and password, no role in URL
+router.post("/login", (req, res, next) => {
   const { employee_id, password } = req.body;
 
   // Validate input
-  if (!password) return next(new Error("Please enter password"));
-  if (!employee_id) return next(new Error("Employee ID required."));
-  if (!['supervisor', 'manager', 'worker'].includes(role)) return next(new Error("Invalid role."));
+  if (!password || !employee_id) {
+    return next(new Error("Employee ID and password are required."));
+  }
 
-  // SQL query according to the provided fields
+  // SQL query to fetch user by employee_id
   const query = `
     SELECT user_id, employee_id, email, password, phone_number, qualification, experience, role 
     FROM users_tbl 
-    WHERE role = ? AND (employee_id = ?)
+    WHERE employee_id = ?
   `;
 
-  // Execute the query
-  connection.query(query, [role, employee_id, email], (err, results) => {
+  connection.query(query, [employee_id], (err, results) => {
     if (err) return next(new Error(`Database query error: ${err}`));
     if (results.length === 0) return next(new Error("User not found"));
 
@@ -57,12 +57,10 @@ const login = (req, res, next, role) => {
     // Check if the password matches
     if (user.password !== password) return next(new Error("Invalid password, please try again"));
 
-    // Send the user token on successful login
+    // Send the user token with role information on successful login
     sendToken(user, 200, res);
   });
-};
-
-
+});
 
 
 router.post("/login/:role", (req, res, next) => {
@@ -72,6 +70,8 @@ router.post("/login/:role", (req, res, next) => {
   }
   login(req, res, next, role);
 })
+
+
 
 // (3) user/logout
 router.get('/logout', (req, res, next) => {
@@ -97,20 +97,20 @@ router.get("/getuser", checkToken, (req, res, next) => {
 
   connection.query(query, [employee_id, user_id], (err, results) => {
     if (err) {
-      return next(new customError(500, `Database query error: ${err}`))
+      return next(new customError(500, `Database query error: ${err}`));
     }
     if (results.length === 0) {
-      return next(new customError(401, "User data not found"))
+      return next(new customError(401, "User data not found"));
     }
-    userData = results[0];
 
+    const userData = results[0];
     res.status(200).json({
       success: true,
-      user: userData
-    })
-  })
+      user: userData,
+    });
+  });
+});
 
-})
 
 
 

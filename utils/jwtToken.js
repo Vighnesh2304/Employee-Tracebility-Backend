@@ -12,21 +12,29 @@ const getToken = (data) => {
 };
 
 const sendToken = (user, statusCode, res) => {
+  // Generate token based on user information (e.g., user_id, role)
   const token = getToken(user);
 
+  // Cookie options
   const options = {
     expires: new Date(
-      Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+      Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000 // Ensure COOKIE_EXPIRE is set properly in .env file
     ),
-    httpOnly: true,
+    httpOnly: true, // Ensures the cookie is not accessible via client-side scripts
+    // secure: process.env.NODE_ENV === 'production', // Uncomment this if using https in production
+    sameSite: 'Lax', // Adjust based on your needs (None, Lax, Strict)
   };
 
-  res.status(statusCode).cookie("token", token, options).json({
-    success: true,
-    token,
-    first_name: user.first_name,  // Ensure this is correctly set
-    role: user.role,
-  });
+  // Send the token as a cookie and return user data
+  res.status(statusCode)
+    .cookie("token", token, options)
+    .json({
+      success: true,
+      token,  // JWT token sent back in response (optional)
+      first_name: user.first_name,  // Assuming user has `first_name` in the database
+      role: user.role,  // Ensure `role` is present in the user object
+    });
 };
+
 
 module.exports = sendToken;
