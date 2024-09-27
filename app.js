@@ -29,7 +29,7 @@ app.use(bodyparser.json());
 app.use(cookieparser());
 
 
-// useing the routes
+// using the routes
 app.use('/user', userRoute)
 app.use('/shift', shiftRoute)
 app.use('/line', linesRoute)
