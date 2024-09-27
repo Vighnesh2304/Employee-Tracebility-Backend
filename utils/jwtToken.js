@@ -18,11 +18,12 @@ const sendToken = (user, statusCode, res) => {
   // Cookie options
   const options = {
     expires: new Date(
-      Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000 // Ensure COOKIE_EXPIRE is set properly in .env file
+      Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000 
     ),
-    httpOnly: true, // Ensures the cookie is not accessible via client-side scripts
-    // secure: process.env.NODE_ENV === 'production', // Uncomment this if using https in production
-    sameSite: 'Lax', // Adjust based on your needs (None, Lax, Strict)
+    httpOnly: true, 
+    path: "/",
+    secure: true,
+    sameSite: 'none', // Adjust based on your needs (None, Lax, Strict)
   };
 
   // Send the token as a cookie and return user data
