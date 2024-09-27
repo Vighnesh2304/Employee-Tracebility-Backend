@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyparser = require("body-parser");
 const cookieparser = require("cookie-parser");
+const corsOptions = require("./utils/utils")
 const cors = require("cors");
 const customError = require("./errorHandler/customError");
 const globalErrorMiddleware = require("./errorHandler/errorController");
@@ -10,11 +11,7 @@ require("dotenv").config();
 const app = express();
 
 // CORS configuration
-app.use(cors({
-    origin: 'http://localhost:5173',  // Allow requests from your Vite frontend
-    credentials: true,                // Allow credentials (cookies, auth tokens)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow the necessary methods
-}));
+app.use(cors(corsOptions));
 
 // importing the Routes
 const userRoute = require('./routes/userRoute');
