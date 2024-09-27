@@ -12,8 +12,8 @@ require("dotenv").config();
 
 
 const app = express();
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.use(cors());
+// app.options('*', cors(corsOptions));
 
 // importing the Routes
 const userRoute = require('./routes/userRoute')
