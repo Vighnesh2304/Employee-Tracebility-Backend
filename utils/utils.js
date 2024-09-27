@@ -1,6 +1,6 @@
 //cors option
 const corsOptions = {
-  origin: ['http://localhost:5174'], // allow only requests from this origin
+  origin: ['https://employee-tracebility.vercel.app'], // allow only requests from this origin
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
