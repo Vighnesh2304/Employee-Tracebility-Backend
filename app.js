@@ -11,9 +11,8 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-    origin: 'http://localhost:5173',  // Allow requests from your Vite frontend
-    credentials: true,                // Allow credentials (cookies, auth tokens)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow the necessary methods
+  origin: 'https://employee-tracebility.vercel.app', // Allow this origin
+  credentials: true, // Allow cookies and credentials
 }));
 
 // importing the Routes
@@ -44,6 +43,6 @@ app.use(globalErrorMiddleware);
 
 const PORT = process.env.PORT;
 
-app.listen(PORT, () => {
+app.listen(PORT,() => {
     console.log(`Server is listening on port http://localhost:${PORT}`);
 });
