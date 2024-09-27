@@ -63,13 +63,13 @@ router.post("/login", (req, res, next) => {
 });
 
 
-router.post("/login/:role", (req, res, next) => {
-  const role = req.params.role;
-  if (!role) {
-    return next(new customError(400, `Missing required params`))
-  }
-  login(req, res, next, role);
-})
+// router.post("/login/:role", (req, res, next) => {
+//   const role = req.params.role;
+//   if (!role) {
+//     return next(new customError(400, `Missing required params`))
+//   }
+//   login(req, res, next, role);
+// })
 
 
 
