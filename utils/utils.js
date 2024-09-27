@@ -1,7 +1,7 @@
 //cors option
 const corsOptions = {
-  origin: '*',
-  methods: 'GET,POST',
+  origin: 'http://localhost:5173',
+  methods: '*',
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
