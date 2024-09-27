@@ -33,18 +33,18 @@ router.post("/adduser", (req, res, next) => {
 // (2) user/login
 
 const login = (req, res, next, role) => {
-  const { employee_id, email, password } = req.body;
+  const { employee_id, password } = req.body;
 
   // Validate input
   if (!password) return next(new Error("Please enter password"));
-  if (!employee_id && !email) return next(new Error("Employee ID or email required."));
+  if (!employee_id) return next(new Error("Employee ID required."));
   if (!['supervisor', 'manager', 'worker'].includes(role)) return next(new Error("Invalid role."));
 
   // SQL query according to the provided fields
   const query = `
     SELECT user_id, employee_id, email, password, phone_number, qualification, experience, role 
     FROM users_tbl 
-    WHERE role = ? AND (employee_id = ? OR email = ?)
+    WHERE role = ? AND (employee_id = ?)
   `;
 
   // Execute the query

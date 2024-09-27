@@ -44,6 +44,6 @@ app.use(globalErrorMiddleware);
 
 const PORT = process.env.PORT;
 
-app.listen(PORT, () => {
+app.listen(PORT,() => {
     console.log(`Server is listening on port http://localhost:${PORT}`);
 });
