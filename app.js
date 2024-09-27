@@ -11,7 +11,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: 'https://employee-tracebility.vercel.app', // Allow this origin
+  origin: process.env.SERVER_URL, // Allow this origin
   credentials: true, // Allow cookies and credentials
 }));
 
