@@ -1,6 +1,7 @@
 //cors option
 const corsOptions = {
-  origin: 'https://employee-tracebility.vercel.app',
+  origin: 'http://employee-tracebility.vercel.app',
+            
   credentials: true,
 };
 
