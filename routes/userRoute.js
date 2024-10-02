@@ -10,9 +10,9 @@ const checkToken = require("../middleware/checkToken")
 // (1) user/adduser
 
 router.post("/adduser", (req, res, next) => {
-  const { employee_id, email, password, phone_number, qualification, experience, role} = req.body;
+  const { employee_id, email, password, phone_number, qualification, experience, role } = req.body;
 
-  if (!employee_id ||  !email || !role) {
+  if (!employee_id || !email || !role) {
     return next(new customError(400, "Missing required fields"));
   }
 
@@ -30,18 +30,55 @@ router.post("/adduser", (req, res, next) => {
 },);
 
 
-// (2) user/login
+// (2) user/update
 
-// login API - only use employee_id and password, no role in URL
+router.put("/updateuser/:employee_id", (req, res, next) => {
+
+  const { employee_id } = req.params;
+  const { email, password, phone_number, qualification, experience, role } = req.body;
+
+  if (!employee_id) {
+    return next(new customError(400, "Invalid employee ID"));
+  }
+
+  if (!email && !password && !phone_number && !qualification && !experience && !role) {
+    return next(new customError(400, "At least one field is required for update"));
+  }
+
+  const query = `UPDATE users_tbl SET ? WHERE employee_id = ?`;
+
+  const updates = {};
+
+  if (email) updates.email = email;
+  if (password) updates.password = password;
+  if (phone_number) updates.phone_number = phone_number;
+  if (qualification) updates.qualification = qualification;
+  if (experience) updates.experience = experience;
+  if (role) updates.role = role;
+
+  connection.query(query, [updates, employee_id], (err, results) => {
+    if (err) {
+      return next(customError(500, `Database query error: ${err}`));
+    }
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully"
+    })
+  })
+});
+
+
+
+// (3) user/login
+
 router.post("/login", (req, res, next) => {
   const { employee_id, password } = req.body;
 
-  // Validate input
+
   if (!password || !employee_id) {
     return next(new Error("Employee ID and password are required."));
   }
 
-  // SQL query to fetch user by employee_id
   const query = `
     SELECT user_id, employee_id, email, password, phone_number, qualification, experience, role 
     FROM users_tbl 
@@ -49,15 +86,15 @@ router.post("/login", (req, res, next) => {
   `;
 
   connection.query(query, [employee_id], (err, results) => {
-    if (err) return next(new Error(`Database query error: ${err}`));
-    if (results.length === 0) return next(new Error("User not found"));
+
+    if (err) return next(new customError(500, `Database query error: ${err}`));
+
+    if (results.length === 0) return next(new customError(404, "User not found"));
 
     const user = results[0];
 
-    // Check if the password matches
-    if (user.password !== password) return next(new Error("Invalid password, please try again"));
+    if (user.password !== password) return next(new customError(401, "Invalid password, please try again"));
 
-    // Send the user token with role information on successful login
     sendToken(user, 200, res);
   });
 });
@@ -73,7 +110,7 @@ router.post("/login", (req, res, next) => {
 
 
 
-// (3) user/logout
+// (4) user/logout
 router.get('/logout', (req, res, next) => {
 
   res.cookie("token", null, {
@@ -88,7 +125,7 @@ router.get('/logout', (req, res, next) => {
 
 });
 
-// (4) user/getuser/
+// (5) user/getuser/
 
 router.get("/getuser", checkToken, (req, res, next) => {
   const user_id = req.user.user_id;
@@ -107,6 +144,64 @@ router.get("/getuser", checkToken, (req, res, next) => {
     res.status(200).json({
       success: true,
       user: userData,
+    });
+  });
+});
+
+
+
+// (6) user/deleteuser/:employee_id
+
+router.delete("/deleteuser/:employee_id", (req, res, next) => {
+  const employee_id = req.params.employee_id;
+
+  // Check if employee_id is valid
+  if (!employee_id) {
+    return next(new customError(400, "Invalid employee ID"));
+  }
+
+  const query = `SELECT * FROM users_tbl WHERE employee_id = ?`;
+
+  connection.query(query, [employee_id], (err, results) => {
+    if (err) {
+      return next(new customError(500, `Database query error: ${err}`));
+    }
+
+    if (results.length === 0) {
+      return next(new customError(404, "User  not found"));
+    }
+
+    const deleteUserQuery = `DELETE FROM users_tbl WHERE employee_id = ?`;
+
+    connection.query(deleteUserQuery, [employee_id], (err, results) => {
+      if (err) {
+        return next(new customError(500, `Database query error: ${err}`));
+      }
+      res.status(200).json({
+        success: true,
+        message: "User  deleted successfully"
+      });
+    });
+  });
+});
+
+
+
+// (7) user/getallusers
+
+router.get("/getall", (req, res, next) => {
+  
+  const query = `SELECT * FROM users_tbl`;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      return next(new customError(500, `Database query error: ${err}`));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully",
+      data: results
     });
   });
 });

@@ -81,6 +81,7 @@ router.put("/updateline/:line_id", (req, res, next) => {
   });
 
   // (3) line/get/:line_id
+
 router.get("/get/:line_id", (req, res, next) => {
   const { line_id } = req.params;
 
@@ -108,7 +109,7 @@ router.get("/get/:line_id", (req, res, next) => {
 
 
 
-router.delete("/deleteline/:line_id", (req, res, next) => {
+router.delete("/delete/:line_id", (req, res, next) => {
   const { line_id } = req.params;
 
   if (!line_id) {
