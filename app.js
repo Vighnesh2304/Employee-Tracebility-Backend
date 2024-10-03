@@ -33,6 +33,10 @@ app.use('/shift', shiftRoute);
 app.use('/line', linesRoute);
 app.use('/job', jobsRoute);
 
+app.get('/api/get',(req,res) => {
+    res.send({message:"hello back to nodejs"})
+})
+
 // default route  
 app.all("*", (req, res, next) => {
     return next(new customError(404, `url ${req.originalUrl} not found on the server!`));
