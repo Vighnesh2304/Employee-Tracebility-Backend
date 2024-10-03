@@ -30,7 +30,7 @@ app.use(cookieparser());
 // using the routes
 app.use('/user', userRoute);
 app.use('/shift', shiftRoute);
-app.use('api/line', linesRoute);
+app.use('/api/line', linesRoute);
 app.use('/job', jobsRoute);
 
 app.get('/api/get',(req,res) => {
