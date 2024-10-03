@@ -28,10 +28,10 @@ app.use(bodyparser.json());
 app.use(cookieparser());
 
 // using the routes
-app.use('/user', userRoute);
-app.use('/shift', shiftRoute);
+app.use('/api/user', userRoute);
+app.use('/api/shift', shiftRoute);
 app.use('/api/line', linesRoute);
-app.use('/job', jobsRoute);
+app.use('/api/job', jobsRoute);
 
 app.get('/api/get',(req,res) => {
     res.send({message:"hello back to nodejs"})
