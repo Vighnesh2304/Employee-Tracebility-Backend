@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start":"node app.js",
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node app.js"
   },
@@ -15,6 +15,7 @@
     "@icyhotx/gitrizz": "^1.0.1",
     "all": "^0.0.0",
     "body-parser": "^1.20.2",
+    "bwip-js": "^4.5.1",
     "connection-string": "^4.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

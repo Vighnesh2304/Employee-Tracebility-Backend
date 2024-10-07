@@ -4,6 +4,7 @@ const customError = require("../errorHandler/customError");
 const connection = require("../utils/dbconnection");
 const sendToken = require("../utils/jwtToken");
 const checkToken = require("../middleware/checkToken")
+const generateBarcode = require("../utils/generateBarcode")
 
 
 
@@ -22,12 +23,32 @@ router.post("/adduser", (req, res, next) => {
     if (err) {
       return next(new customError(500, `Database query error: ${err}`));
     }
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully"
+
+    const newUserId = results.insertId;
+
+    // Generate the barcode
+    generateBarcode(newUserId, (err, barcodeFilePath) => {
+      if (err) {
+        return next(new customError(500, `Error generating barcode: ${err}`));
+      }
+
+      // Update the user record with the barcode file path
+      const updateQuery = `UPDATE users_tbl SET barcode = ? WHERE user_id = ?`;
+      connection.query(updateQuery, [barcodeFilePath, newUserId], (err, updateResult) => {
+        if (err) {
+          return next(new customError(500, `Error updating user with barcode: ${err}`));
+        }
+
+        res.status(201).json({
+          success: true,
+          message: "User registered successfully",
+          barcode: barcodeFilePath // Optionally return the barcode path
+        });
+      });
     });
   });
-},);
+});
+
 
 
 // (2) user/update
@@ -190,7 +211,7 @@ router.delete("/deleteuser/:employee_id", (req, res, next) => {
 // (7) user/getallusers
 
 router.get("/getall", (req, res, next) => {
-  
+
   const query = `SELECT * FROM users_tbl`;
 
   connection.query(query, (err, results) => {
