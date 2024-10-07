@@ -20,6 +20,7 @@ const userRoute = require('./routes/userRoute');
 const shiftRoute = require('./routes/shiftRoute');
 const linesRoute = require('./routes/linesRoute');
 const jobsRoute = require('./routes/jobsRoutes');
+const stationRoute = require("./routes/stationRoute");
 
 // middle-ware for the req.body
 app.use(express.json());
@@ -32,6 +33,7 @@ app.use('/api/user', userRoute);
 app.use('/api/shift', shiftRoute);
 app.use('/api/line', linesRoute);
 app.use('/api/job', jobsRoute);
+app.use('/api/station', stationRoute);
 
 app.get('/api/get',(req,res) => {
     res.send({message:"hello back to nodejs"})
