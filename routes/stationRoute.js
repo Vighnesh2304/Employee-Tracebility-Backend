@@ -159,32 +159,49 @@ router.post("/assignStation", (req, res, next) => {
         endDateValue = null; 
     }
 
-    // Step 1: Update the existing record by setting the end_date to NOW() if the station is already assigned
-    const updateQuery = `
-        UPDATE line_station_link 
-        SET end_date = NOW()
-        WHERE station_id = ? AND end_date IS NULL
+    // Step 1: Check if the station is already assigned to the line
+    const checkQuery = `
+        SELECT * FROM line_station_link 
+        WHERE station_id = ? AND line_id = ? AND end_date IS NULL
     `;
-    
-    connection.query(updateQuery, [station_id], (err, updateResults) => {
+
+    connection.query(checkQuery, [station_id, line_id], (err, checkResults) => {
         if (err) {
             return next(new customError(500, `Database query error: ${err}`));
         }
 
-        // Step 2: Insert the new assignment into the line_station_link table
-        const insertQuery = `
-            INSERT INTO line_station_link (line_id, station_id, start_date, end_date)
-            VALUES (?, ?, ?, ?)
-        `;
+        // If a record exists, return an error response
+        if (checkResults.length > 0) {
+            return next(new customError(400, "This station is already assigned to the specified line."));
+        }
 
-        connection.query(insertQuery, [line_id, station_id, startDateValue, endDateValue], (err, insertResults) => {
+        // Step 2: Update the existing record by setting the end_date to NOW() if the station is already assigned
+        const updateQuery = `
+            UPDATE line_station_link 
+            SET end_date = NOW()
+            WHERE station_id = ? AND end_date IS NULL
+        `;
+        
+        connection.query(updateQuery, [station_id], (err, updateResults) => {
             if (err) {
                 return next(new customError(500, `Database query error: ${err}`));
             }
 
-            res.status(201).json({
-                success: true,
-                message: "Station assigned to line successfully"
+            // Step 3: Insert the new assignment into the line_station_link table
+            const insertQuery = `
+                INSERT INTO line_station_link (line_id, station_id, start_date, end_date)
+                VALUES (?, ?, ?, ?)
+            `;
+
+            connection.query(insertQuery, [line_id, station_id, startDateValue, endDateValue], (err, insertResults) => {
+                if (err) {
+                    return next(new customError(500, `Database query error: ${err}`));
+                }
+
+                res.status(201).json({
+                    success: true,
+                    message: "Station assigned to line successfully"
+                });
             });
         });
     });
