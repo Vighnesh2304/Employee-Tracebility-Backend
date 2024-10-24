@@ -1,35 +1,52 @@
 const bwipjs = require('bwip-js');
-const fs = require('fs');
-const path = require('path');
+const AWS = require('aws-sdk');
+
+// Configure AWS SDK for DigitalOcean Spaces
+const spacesEndpoint = new AWS.Endpoint('blr1.digitaloceanspaces.com');
+ // Replace with your region's endpoint
+const s3 = new AWS.S3({
+  endpoint: spacesEndpoint,
+  accessKeyId: process.env.DO_SPACES_KEY,
+  secretAccessKey: process.env.DO_SPACES_SECRET,
+  region: 'blr1', // Use your Space's region code if necessary
+});
 
 
 const generateBarcode = (userId, callback) => {
-  const barcodeData = `https://yourdomain.com/user/get/${userId}`;
+  const barcodeData = `https://yourdomain.com/user/getuser/${userId}`; // Data for the barcode
 
+  // Generate the barcode as a PNG buffer
   bwipjs.toBuffer({
-    bcid: 'code128',       
-    text: barcodeData,     
-    scale: 3,              
-    height: 10,           
-    includetext: true,    
-    textxalign: 'center',  
+    bcid: 'code128',       // Barcode type
+    text: barcodeData,     // Data to encode
+    scale: 3,              // Scale factor
+    height: 10,            // Barcode height in millimeters
+    includetext: true,     // Include text below the barcode
+    textxalign: 'center',  // Center the text
   }, (err, pngBuffer) => {
     if (err) {
       return callback(err);
     }
 
-    const barcodeFilePath = path.join(__dirname, 'barcodes', `user_${userId}_barcode.png`);
+    // Define the filename for the barcode
+    const barcodeFileName = `user_${userId}_barcode.png`;
 
-    if (!fs.existsSync(path.join(__dirname, 'barcodes'))) {
-      fs.mkdirSync(path.join(__dirname, 'barcodes'));
-    }
+    // Upload the barcode image to DigitalOcean Spaces
+    const params = {
+      Bucket: 'curtis-emp-data', // Replace with your DigitalOcean Space name
+      Key: `barcodes/${barcodeFileName}`, // File path in the Space
+      Body: pngBuffer, // The PNG buffer to upload
+      ACL: 'public-read', // Make the file publicly accessible
+      ContentType: 'image/png', // Set the file's content type
+    };
 
-    fs.writeFile(barcodeFilePath, pngBuffer, (err) => {
+    s3.upload(params, (err, data) => {
       if (err) {
-        return callback(err);
+        return callback(err); // Handle error during upload
       }
 
-      callback(null, barcodeFilePath);
+      // Return the public URL of the uploaded barcode
+      callback(null, data.Location); // `data.Location` is the public URL of the barcode image
     });
   });
 };

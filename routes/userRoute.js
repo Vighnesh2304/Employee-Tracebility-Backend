@@ -5,49 +5,104 @@ const connection = require("../utils/dbconnection");
 const sendToken = require("../utils/jwtToken");
 const checkToken = require("../middleware/checkToken")
 const generateBarcode = require("../utils/generateBarcode")
+const uploadDocument = require('../utils/uploadDocuments');
+
 
 
 
 // (1) user/adduser
 
-router.post("/adduser", (req, res, next) => {
-  const { employee_id, email, password, phone_number, qualification, experience, role } = req.body;
+const multer = require('multer');
 
-  if (!employee_id || !email || !role) {
+// Configure multer for file handling
+const storage = multer.memoryStorage(); // Save files in memory (for small files)
+const upload = multer({ storage });
+
+// Update the route to handle multipart/form-data
+router.post("/adduser", upload.single('documents'), (req, res, next) => {
+  const { 
+    employee_id, 
+    employee_name, 
+    email, 
+    password, 
+    phone_number, 
+    qualification, 
+    experience, 
+    role, 
+    postal_address, 
+    date_of_joining 
+  } = req.body;
+
+  // Validate required fields
+  if (!employee_id || !employee_name || !email || !role || !password) {
     return next(new customError(400, "Missing required fields"));
   }
 
-  const query = `INSERT INTO users_tbl (employee_id, email, password, phone_number, qualification, experience, role) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  const documents = req.file; // Handle document file uploaded
 
-  connection.query(query, [employee_id, email, password, phone_number, qualification, experience, role], (err, results) => {
+  // Database query to insert the user data
+  const query = `INSERT INTO users_tbl (employee_id, employee_name, email, password, phone_number, qualification, experience, role, postal_address, date_of_joining) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  connection.query(query, [employee_id, employee_name, email, password, phone_number, qualification, experience, role, postal_address, date_of_joining], (err, results) => {
     if (err) {
       return next(new customError(500, `Database query error: ${err}`));
     }
 
     const newUserId = results.insertId;
 
-    // Generate the barcode
+    // Handle barcode generation and document upload if provided
     generateBarcode(newUserId, (err, barcodeFilePath) => {
       if (err) {
         return next(new customError(500, `Error generating barcode: ${err}`));
       }
 
-      // Update the user record with the barcode file path
+      // Update the user with the barcode file path
       const updateQuery = `UPDATE users_tbl SET barcode = ? WHERE user_id = ?`;
       connection.query(updateQuery, [barcodeFilePath, newUserId], (err, updateResult) => {
         if (err) {
           return next(new customError(500, `Error updating user with barcode: ${err}`));
         }
 
-        res.status(201).json({
-          success: true,
-          message: "User registered successfully",
-          barcode: barcodeFilePath // Optionally return the barcode path
-        });
+        if (documents) {
+          const documentBuffer = documents.buffer; // Get the document buffer
+          const documentName = `${employee_id}_document.pdf`; // Create a unique name for the document
+
+          uploadDocument(documentBuffer, documentName, (err, documentUrl) => {
+            if (err) {
+              return next(new customError(500, `Error uploading document: ${err}`));
+            }
+
+            const documentUpdateQuery = `UPDATE users_tbl SET documents = ? WHERE user_id = ?`;
+            connection.query(documentUpdateQuery, [documentUrl, newUserId], (err, docUpdateResult) => {
+              if (err) {
+                return next(new customError(500, `Error updating user with document: ${err}`));
+              }
+
+              res.status(201).json({
+                success: true,
+                message: "User registered successfully",
+                barcode: barcodeFilePath,
+                document: documentUrl,
+              });
+            });
+          });
+        } else {
+          res.status(201).json({
+            success: true,
+            message: "User registered successfully",
+            barcode: barcodeFilePath,
+          });
+        }
       });
     });
   });
 });
+
+
+
+
+
+
 
 
 

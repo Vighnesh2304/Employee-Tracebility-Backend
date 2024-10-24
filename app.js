@@ -4,7 +4,7 @@ const cookieparser = require("cookie-parser");
 const cors = require("cors");
 const customError = require("./errorHandler/customError");
 const globalErrorMiddleware = require("./errorHandler/errorController");
-
+const fileUpload = require('express-fileupload');
 require("dotenv").config();
 
 const app = express();
@@ -29,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyparser.json());
 app.use(cookieparser());
 
+
 // using the routes
 app.use('/api/user', userRoute);
 app.use('/api/shift', shiftRoute);
@@ -41,6 +42,7 @@ app.use('/api/controller_family', controllerFamilyRoute);
 app.get('/api/get',(req,res) => {
     res.send({message:"hello back to nodejs"})
 })
+app.use(fileUpload());
 
 // default route  
 app.all("*", (req, res, next) => {
