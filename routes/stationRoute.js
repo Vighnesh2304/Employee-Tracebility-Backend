@@ -150,13 +150,13 @@ router.post("/assignStation", (req, res, next) => {
     if (start_date) {
         startDateValue = moment(start_date, 'MM/DD/YYYY, h:mm A').format('YYYY-MM-DD HH:mm:ss');
     } else {
-        startDateValue = new Date(); 
+        startDateValue = new Date();
     }
 
     if (end_date) {
         endDateValue = moment(end_date, 'MM/DD/YYYY, h:mm A').format('YYYY-MM-DD HH:mm:ss');
     } else {
-        endDateValue = null; 
+        endDateValue = null;
     }
 
     // Step 1: Check if the station is already assigned to the line
@@ -181,7 +181,7 @@ router.post("/assignStation", (req, res, next) => {
             SET end_date = NOW()
             WHERE station_id = ? AND end_date IS NULL
         `;
-        
+
         connection.query(updateQuery, [station_id], (err, updateResults) => {
             if (err) {
                 return next(new customError(500, `Database query error: ${err}`));
@@ -283,6 +283,59 @@ router.get("/getAllStations", (req, res, next) => {
     });
 });
 
+
+// get only Allocated Stations 
+
+router.get("/getAllocatedStations", (req, res, next) => {
+    // Query to get all allocated stations
+    const allocatedQuery = `
+        SELECT s.station_id, s.station_name, s.station_description, lsl.line_id, l.line_name, lsl.start_date, lsl.end_date
+        FROM stations_tbl s
+        JOIN line_station_link lsl ON s.station_id = lsl.station_id
+        JOIN lines_tbl l ON lsl.line_id = l.line_id
+        WHERE lsl.end_date IS NULL
+    `;
+
+    // Execute both queries simultaneously
+    connection.query(allocatedQuery, (errAllocated, allocatedResults) => {
+        if (errAllocated) {
+            return next(new customError(500, `Database query error: ${errAllocated}`));
+        }
+
+        res.status(200).json({
+            success: true,
+            allocated: allocatedResults
+        });
+    });
+});
+
+
+// Deallocating a station from a line 
+
+router.put("/deAllocateStation", (req, res, next) => {
+    const { line_id, station_id } = req.body;
+
+    if (!line_id || !station_id) {
+        return next(new customError(400, "Missing required fields: line_id or station_id"));
+    }
+
+    const Query = `
+            UPDATE line_station_link 
+            SET end_date = NOW()
+            WHERE line_id = ? AND station_id = ? AND end_date IS NULL
+        `;
+
+    connection.query(Query, [line_id, station_id], (err, reult) => {
+        if (err) {
+            return next(new customError(500, `Database query error: ${err}`));
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Station Deallocated Successfully"
+        })
+    })
+})
 
 
 module.exports = router;

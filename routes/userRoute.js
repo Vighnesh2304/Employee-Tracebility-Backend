@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const customError = require("../errorHandler/customError");
 const connection = require("../utils/dbconnection");
+const moment = require('moment');
 const sendToken = require("../utils/jwtToken");
 const checkToken = require("../middleware/checkToken")
 const generateBarcode = require("../utils/generateBarcode")
@@ -20,23 +21,27 @@ const upload = multer({ storage });
 
 // Update the route to handle multipart/form-data
 router.post("/adduser", upload.single('documents'), (req, res, next) => {
-  const { 
-    employee_id, 
-    employee_name, 
-    email, 
-    password, 
-    phone_number, 
-    qualification, 
-    experience, 
-    role, 
-    postal_address, 
-    date_of_joining 
+  const {
+    employee_id,
+    employee_name,
+    email,
+    password,
+    phone_number,
+    qualification,
+    experience,
+    role,
+    postal_address,
+    date_of_joining
   } = req.body;
+
+  console.log(employee_id);
 
   // Validate required fields
   if (!employee_id || !employee_name || !email || !role || !password) {
     return next(new customError(400, "Missing required fields"));
   }
+
+  
 
   const documents = req.file; // Handle document file uploaded
 
@@ -97,12 +102,6 @@ router.post("/adduser", upload.single('documents'), (req, res, next) => {
     });
   });
 });
-
-
-
-
-
-
 
 
 
@@ -278,6 +277,32 @@ router.get("/getall", (req, res, next) => {
       success: true,
       message: "Users retrieved successfully",
       data: results
+    });
+  });
+});
+
+
+router.get("/fetchuser/:employee_id", checkToken, (req, res, next) => {
+  const { employee_id } = req.params;
+
+  const query = `SELECT * FROM users_tbl WHERE employee_id = ? `;
+
+  connection.query(query, [employee_id], (err, results) => {
+    if (err) {
+      return next(new customError(500, `Database query error: ${err}`));
+    }
+    if (results.length === 0) {
+      return next(new customError(401, "User data not found"));
+    }
+
+    const userData = results[0];
+
+    const formattedDateOfJoining = moment(userData.date_of_joining).format('YYYY-MM-DDTHH:mm');
+
+
+    res.status(200).json({
+      success: true,
+      user: {...userData,date_of_joining:formattedDateOfJoining },
     });
   });
 });
