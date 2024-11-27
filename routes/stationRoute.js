@@ -200,6 +200,7 @@ router.post("/assignStation", (req, res, next) => {
 
                 res.status(201).json({
                     success: true,
+                    
                     message: "Station assigned to line successfully"
                 });
             });
@@ -335,7 +336,36 @@ router.put("/deAllocateStation", (req, res, next) => {
             message: "Station Deallocated Successfully"
         })
     })
-})
+});
+
+// Get a Line data for a specific station 
+
+
+router.get("/getline/:station_id", (req, res, next) => {
+    const { station_id } = req.params;
+
+    if (!station_id) {
+        return next(new customError(400, "Missing required fields: station_id"));
+    }
+
+    const Query = `
+            SELECT lsl.line_id, lt.line_name
+            FROM line_station_link lsl
+            JOIN lines_tbl lt ON lt.line_id = lsl.line_id
+            WHERE lsl.station_id = ? AND lsl.end_date IS NULL
+        `;
+
+    connection.query(Query, [station_id], (err, result) => {
+        if (err) {
+            return next(new customError(500, `Database query error: ${err}`));
+        }
+
+        res.status(200).json({
+            success: true,
+            data: result[0]
+        })
+    })
+});
 
 
 module.exports = router;
