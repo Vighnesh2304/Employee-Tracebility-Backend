@@ -22,6 +22,7 @@ const linesRoute = require('./routes/linesRoute');
 const jobsRoute = require('./routes/jobsRoutes');
 const stationRoute = require("./routes/stationRoute");
 const controllerFamilyRoute = require("./routes/controllerFamilyRoute");
+const userEfficiencyRoute = require("./routes/userEfficiency");
 
 // middle-ware for the req.body
 app.use(express.json());
@@ -37,6 +38,7 @@ app.use('/api/line', linesRoute);
 app.use('/api/job', jobsRoute);
 app.use('/api/station', stationRoute);
 app.use('/api/controller_family', controllerFamilyRoute);
+app.use('/api/',userEfficiencyRoute)
 
 
 app.get('/api/get',(req,res) => {

@@ -15,8 +15,6 @@ router.post("/addjob", (req, res, next) => {
         return next(new customError(400, "Missing required fields"));
     }
 
-    console.log(station_id, line_id, user_id, shift_id);
-
     let jobDateValue = null;
 
     if (job_date) {
@@ -98,8 +96,6 @@ router.put("/updatejob/:job_id", (req, res, next) => {
         return next(new customError(400, "No fields to update"));
     }
 
-    console.log(job_date);
-
     let jobDateValue = null;
 
     if (job_date) {
@@ -160,7 +156,7 @@ router.put("/updatejob/:job_id", (req, res, next) => {
     });
 });
 
-// job/delete/
+// (3) job/delete/
 
 router.delete("/delete/:job_id", (req, res, next) => {
     const job_id = req.params.job_id;
@@ -242,5 +238,102 @@ router.get("/get/:job_id", (req, res, next) => {
         });
     });
 });
+
+
+// (6) get pending jobs 
+
+router.get("/getpendingjob", (req, res, next) => {
+
+    const { user_id } = req.body;
+
+    if (!user_id) {
+        return next(new customError(400, "user_id not provided"));
+    }
+
+    const query = `
+    SELECT 
+      j.job_id,
+      u.employee_id,
+      u.employee_name,
+      st.station_name,
+      l.line_name,
+      s.shift_name,
+      j.job_date,
+      j.status
+    FROM 
+      jobs_tbl j
+      INNER JOIN stations_tbl st ON j.station_id = st.station_id
+      INNER JOIN lines_tbl l ON j.line_id = l.line_id
+      INNER JOIN users_tbl u ON j.user_id = u.user_id
+      INNER JOIN shifts_tbl s ON j.shift_id = s.shift_id
+    WHERE
+      j.end_date IS null AND j.user_id = ? AND j.status = 'pending'
+  `;
+
+    connection.query(query, [user_id], (err, results) => {
+        if (err) {
+            return next(new customError(500, `Database query error: ${err}`));
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No pending jobs found for the user",
+            });
+        }
+        
+        results.forEach((job) => {
+            job.job_date = moment(job.job_date, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm:ss');
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Jobs retrieved successfully",
+            data: results
+        });
+    });
+});
+
+// Complete a pending job
+
+router.put("/completejob", (req, res, next) => {
+    const { user_id, job_id, end_date } = req.body;
+
+    if (!user_id || !job_id) {
+        return next(new customError(400, "user_id and job_id not provided"));
+    }
+
+    const endDate = end_date || moment().format('YYYY-MM-DD HH:mm:ss');
+
+    const query = `
+        UPDATE jobs_tbl
+        SET 
+            status = 'completed',
+            end_date = ?
+        WHERE 
+            job_id = ? AND user_id = ? AND status = 'pending'
+    `;
+
+    connection.query(query, [endDate, job_id, user_id], (err, results) => {
+        if (err) {
+            console.error(`Database error: ${err.message}`); // Log error for debugging
+            return next(new customError(500, "Database query error"));
+        }
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No pending job found with the given job_id and user_id",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Job marked as completed successfully",
+        });
+    });
+});
+
+
 
 module.exports = router;

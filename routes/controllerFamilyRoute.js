@@ -176,8 +176,7 @@ router.delete("/delete/:controller_family_id", (req, res, next) => {
     });
 });
 
-
-// Assign a Controller_Family to a Line 
+// assign a controller family to a line 
 
 router.post("/assign", (req, res, next) => {
     const { line_id, controller_family_id, start_date, end_date } = req.body;
@@ -196,47 +195,156 @@ router.post("/assign", (req, res, next) => {
         return next(new customError(400, "Invalid date format. Please use a valid date format (e.g., YYYY-MM-DD HH:mm:ss)"));
     }
 
-    // Check if the family is already assigned to a line
-    const query = `
-        SELECT line_id 
+    // Check if the line already has a controller family assigned
+    const lineCheckQuery = `
+        SELECT controller_family_id 
         FROM line_controller_family_link 
-        WHERE controller_family_id = ? AND (end_date IS NULL OR end_date > NOW())
+        WHERE line_id = ? AND (end_date IS NULL OR end_date > NOW())
     `;
 
-    connection.query(query, [controller_family_id], (err, results) => {
-        if (err) {
-            return next(new customError(500, `Database query error: ${err}`));
+    connection.query(lineCheckQuery, [line_id], (lineErr, lineResults) => {
+        if (lineErr) {
+            return next(new customError(500, `Database query error: ${lineErr}`));
         }
 
-        if (results.length > 0) {
+        if (lineResults.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: `Controller Family ${controller_family_id} is already assigned to Line ${results[0].line_id}`,
+                message: `Line ${line_id} already has a Controller Family ${lineResults[0].controller_family_id} assigned`,
                 data: null
             });
         }
 
-        // SQL query to insert the assignment
-        const insertQuery = `
-            INSERT INTO line_controller_family_link (line_id, controller_family_id, start_date, end_date) 
-            VALUES (?, ?, ?, ?)
+        // Check if the family is already assigned to another line
+        const familyCheckQuery = `
+            SELECT line_id 
+            FROM line_controller_family_link 
+            WHERE controller_family_id = ? AND (end_date IS NULL OR end_date > NOW())
         `;
 
-        connection.query(insertQuery, [line_id, controller_family_id, formattedStartDate, formattedEndDate], (err, results) => {
-            if (err) {
-                return next(new customError(500, `Database query error: ${err}`));
+        connection.query(familyCheckQuery, [controller_family_id], (familyErr, familyResults) => {
+            if (familyErr) {
+                return next(new customError(500, `Database query error: ${familyErr}`));
             }
 
-            res.status(201).json({
-                success: true,
-                message: "Controller Family assigned to Line successfully",
-                data: {
-                    line_id,
-                    controller_family_id,
-                    start_date: formattedStartDate,
-                    end_date: formattedEndDate
+            if (familyResults.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Controller Family ${controller_family_id} is already assigned to Line ${familyResults[0].line_id}`,
+                    data: null
+                });
+            }
+
+            // SQL query to insert the assignment
+            const insertQuery = `
+                INSERT INTO line_controller_family_link (line_id, controller_family_id, start_date, end_date) 
+                VALUES (?, ?, ?, ?)
+            `;
+
+            connection.query(insertQuery, [line_id, controller_family_id, formattedStartDate, formattedEndDate], (insertErr, results) => {
+                if (insertErr) {
+                    return next(new customError(500, `Database query error: ${insertErr}`));
                 }
+
+                res.status(201).json({
+                    success: true,
+                    message: "Controller Family assigned to Line successfully",
+                    data: {
+                        line_id,
+                        controller_family_id,
+                        start_date: formattedStartDate,
+                        end_date: formattedEndDate
+                    }
+                });
             });
+        });
+    });
+});
+
+// get allocated families 
+
+router.get("/getAllocatedFamilies", (req, res, next) => {
+    
+    const query = `
+        SELECT 
+            lcfl.line_id, 
+            lcfl.controller_family_id, 
+            l.line_name,
+            cf.family_name,
+            lcfl.start_date, 
+            lcfl.end_date
+        FROM 
+            line_controller_family_link lcfl
+        JOIN 
+            lines_tbl l ON lcfl.line_id = l.line_id
+        JOIN 
+            controller_family_tbl cf ON lcfl.controller_family_id = cf.controller_family_id
+        WHERE 
+            (lcfl.end_date IS NULL OR lcfl.end_date > NOW())
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            return next(new customError(500, `Database query error: ${err}`));
+        }
+
+        // If no results found
+        if (results.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No active controller family allocations found",
+                data: null
+            });
+        }
+
+        // Return successful response
+        res.status(200).json({
+            success: true,
+            message: "Controller families retrieved successfully",
+            data: results
+        });
+    });
+});
+
+// get free families
+
+router.get("/getFreeFamilies", (req, res, next) => {
+    // SQL query to fetch controller families not currently allocated to any line
+    const query = `
+        SELECT 
+            cf.controller_family_id,
+            cf.family_name
+        FROM 
+            controller_family_tbl cf
+        WHERE 
+            cf.controller_family_id NOT IN (
+                SELECT DISTINCT controller_family_id 
+                FROM line_controller_family_link 
+                WHERE 
+                    end_date IS NULL OR 
+                    end_date > NOW()
+            )
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            return next(new customError(500, `Database query error: ${err}`));
+        }
+
+        // If no free controller families found
+        if (results.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No free controller families available",
+                data: null
+            });
+        }
+
+        // Return successful response
+        res.status(200).json({
+            success: true,
+            message: "Free controller families retrieved successfully",
+            data: results
         });
     });
 });
